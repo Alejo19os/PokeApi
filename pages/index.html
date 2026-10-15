@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PokeAPI</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #f5f7ff, #dfe9ff);
+        color: #1f2937;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px 20px 50px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .search-box {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      input {
+        width: 220px;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 12px 18px;
+        border: none;
+        border-radius: 10px;
+        background: #2563eb;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      .card {
+        background: white;
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+      }
+
+      .pokemon-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .pokemon-name {
+        text-transform: capitalize;
+        font-size: 2rem;
+        margin: 0;
+      }
+
+      .pokemon-id {
+        font-size: 1rem;
+        color: #64748b;
+      }
+
+      .pokemon-content {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 24px;
+        margin-top: 20px;
+      }
+
+      .sprite-box {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 240px;
+      }
+
+      .sprite-box img {
+        width: 180px;
+        height: 180px;
+        object-fit: contain;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+      }
+
+      .info-item {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .info-item b {
+        display: block;
+        font-size: 0.8rem;
+        color: #475569;
+        margin-bottom: 6px;
+      }
+
+      .types {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .type {
+        background: #dbeafe;
+        color: #1d4ed8;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: capitalize;
+      }
+
+      .stats {
+        margin-top: 26px;
+      }
+
+      .stats h3 {
+        margin-bottom: 12px;
+      }
+
+      .stat-item {
+        margin-bottom: 12px;
+      }
+
+      .stat-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+      }
+
+      .bar {
+        width: 100%;
+        height: 10px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #3b82f6);
+        border-radius: 999px;
+      }
+
+      .error {
+        color: #b91c1c;
+        text-align: center;
+        margin-top: 12px;
+      }
+
+      @media (max-width: 700px) {
+        .pokemon-content {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Pokémon API</h1>
+
+      <div class="search-box">
+        <input id="pokemonId" type="number" min="1" value="1" placeholder="ID del Pokémon" />
+        <button id="buscarBtn">Buscar</button>
+      </div>
+
+      <div id="pokemonCard" class="card" style="display: none;">
+        <div class="pokemon-header">
+          <div>
+            <p class="pokemon-id">#<span id="pokemonIdLabel"></span></p>
+            <h2 id="pokemonName" class="pokemon-name"></h2>
+          </div>
+        </div>
+
+        <div class="pokemon-content">
+          <div class="sprite-box">
+            <img id="pokemonImage" src="" alt="Pokémon" />
+          </div>
+
+          <div>
+            <div class="info-grid">
+              <div class="info-item">
+                <b>Altura</b>
+                <span id="pokemonHeight"></span>
+              </div>
+              <div class="info-item">
+                <b>Peso</b>
+                <span id="pokemonWeight"></span>
+              </div>
+              <div class="info-item">
+                <b>Experiencia base</b>
+                <span id="pokemonExp"></span>
+              </div>
+              <div class="info-item">
+                <b>Tipo</b>
+                <div id="pokemonTypes" class="types"></div>
+              </div>
+            </div>
+
+            <div class="stats">
+              <h3>Stats</h3>
+              <div id="statsList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="errorMessage" class="error"></div>
+    </div>
+
+    <script>
+      const input = document.getElementById('pokemonId');
+      const button = document.getElementById('buscarBtn');
+      const card = document.getElementById('pokemonCard');
+      const errorMessage = document.getElementById('errorMessage');
+
+      const setPokemon = async (id) => {
+        try {
+          const response = await fetch(`/pokemon/${id}`);
+          if (!response.ok) {
+            throw new Error('No se encontró ese Pokémon');
+          }
+
+          const pokemon = await response.json();
+          const image = pokemon.sprites?.front_default || pokemon.sprites?.other?.home?.front_default;
+
+          document.getElementById('pokemonIdLabel').textContent = pokemon.id;
+          document.getElementById('pokemonName').textContent = pokemon.name;
+          document.getElementById('pokemonImage').src = image;
+          document.getElementById('pokemonHeight').textContent = `${pokemon.height / 10} m`;
+          document.getElementById('pokemonWeight').textContent = `${pokemon.weight / 10} kg`;
+          document.getElementById('pokemonExp').textContent = pokemon.base_experience;
+
+          const typesContainer = document.getElementById('pokemonTypes');
+          typesContainer.innerHTML = '';
+          pokemon.types.forEach((item) => {
+            const type = document.createElement('span');
+            type.className = 'type';
+            type.textContent = item.type.name;
+            typesContainer.appendChild(type);
+          });
+
+          const statsList = document.getElementById('statsList');
+          statsList.innerHTML = '';
+          pokemon.stats.forEach((stat) => {
+            const row = document.createElement('div');
+            row.className = 'stat-item';
+            row.innerHTML = `
+              <div class="stat-top">
+                <span>${stat.stat.name}</span>
+                <span>${stat.base_stat}</span>
+              </div>
+              <div class="bar">
+                <div class="fill" style="width: ${Math.min(stat.base_stat, 100)}%"></div>
+              </div>
+            `;
+            statsList.appendChild(row);
+          });
+
+          card.style.display = 'block';
+          errorMessage.textContent = '';
+        } catch (error) {
+          card.style.display = 'none';
+          errorMessage.textContent = error.message;
+        }
+      };
+
+      button.addEventListener('click', () => {
+        const value = Number(input.value);
+        if (value > 0) {
+          setPokemon(value);
+        } else {
+          errorMessage.textContent = 'Ingresa un ID válido';
+        }
+      });
+
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          button.click();
+        }
+      });
+
+      setPokemon(1);
+    </script>
+  </body>
+</html>
